@@ -8,6 +8,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  ComposedChart,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -387,14 +388,15 @@ function percentChange(current: number, previous: number) {
   return (current - previous) / previous * 100;
 }
 
-type SummaryIconId = "revenue" | "bonus" | "balance" | "profit" | "ads" | "delivery" | "catalog" | "attention";
+type SummaryIconId = "revenue" | "orders" | "buyouts" | "profit" | "margin" | "ads" | "delivery" | "catalog" | "attention";
 
 function SummaryIcon({ name }: { name: SummaryIconId }) {
   const paths: Record<SummaryIconId, React.ReactNode> = {
     revenue: <><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></>,
-    bonus: <><path d="M4 10h16v10H4zM3 7h18v4H3zM12 7v13"/><path d="M12 7c-4 0-6-1.2-6-3 0-1.1.9-2 2-2 2 0 4 5 4 5Zm0 0c4 0 6-1.2 6-3 0-1.1-.9-2-2-2-2 0-4 5-4 5Z"/></>,
-    balance: <><path d="m12 3 8 4-8 4-8-4 8-4Z"/><path d="m4 12 8 4 8-4M4 17l8 4 8-4"/></>,
+    orders: <><path d="M4 5h16v15H4z"/><path d="M8 3v4m8-4v4M4 10h16M8 14h3m2 0h3M8 17h3"/></>,
+    buyouts: <><circle cx="12" cy="12" r="9"/><path d="m8 12 2.6 2.6L16.5 9"/></>,
     profit: <><path d="M4 19V9m6 10V5m6 14v-7m4 7V3"/><path d="m3 8 6-4 6 5 6-7"/></>,
+    margin: <><path d="M7 17 17 7"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></>,
     ads: <><path d="m4 13 12-5v10L4 13Z"/><path d="M16 10c2 0 4 1.5 4 3s-2 3-4 3M6 14l1 6h4l-1-5"/></>,
     delivery: <><path d="M3 6h11v11H3zM14 10h4l3 3v4h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></>,
     catalog: <><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 8 9 5 9-5v9l-9 5-9-5V8Z"/><path d="M12 13v9"/></>,
@@ -403,20 +405,21 @@ function SummaryIcon({ name }: { name: SummaryIconId }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
 }
 
-function SummaryCard({ tone, label, value, note, icon, comparison }: { tone: string; label: string; value: string; note: string; icon: SummaryIconId; comparison: number | null }) {
-  const comparisonText = comparison === null ? "Нет данных" : `${comparison >= 0 ? "↗" : "↘"} ${comparison >= 0 ? "+" : ""}${comparison.toFixed(1).replace(".", ",")}%`;
+function SummaryCard({ tone, label, value, note, icon, comparison, comparisonLabel = "к прошлому месяцу", inverse = false }: { tone: string; label: string; value: string; note: string; icon: SummaryIconId; comparison: number | null; comparisonLabel?: string; inverse?: boolean }) {
+  const comparisonText = comparison === null ? "Нет сравнения" : `${comparison >= 0 ? "↗" : "↘"} ${comparison >= 0 ? "+" : ""}${comparison.toFixed(1).replace(".", ",")}%`;
+  const positive = comparison !== null && (inverse ? comparison <= 0 : comparison >= 0);
   return (
     <article className={`summary-card summary-card-${tone}`}>
       <div className="summary-card-top"><span className="summary-card-icon"><SummaryIcon name={icon}/></span></div>
       <span className="summary-card-label">{label}</span>
       <strong>{value}</strong>
       <p>{note}</p>
-      <div className="summary-card-comparison"><span className={comparison === null ? "neutral" : comparison >= 0 ? "positive" : "negative"}>{comparisonText}</span><small>к прошлому месяцу</small></div>
+      <div className="summary-card-comparison"><span className={comparison === null ? "neutral" : positive ? "positive" : "negative"}>{comparisonText}</span><small>{comparisonLabel}</small></div>
     </article>
   );
 }
 
-function OverviewDashboard({ marketplace, summary, previousSummary, analytics, previousAnalytics, reports, pendingAnalysis, period, onPeriodChange, onOpenSettings }: {
+function OverviewDashboard({ marketplace, summary, previousSummary, analytics, previousAnalytics, reports, pendingAnalysis, period, onPeriodChange, onOpenSettings, onNavigate }: {
   marketplace: MarketplaceId;
   summary: ImportSummary;
   previousSummary: ImportSummary;
@@ -427,60 +430,107 @@ function OverviewDashboard({ marketplace, summary, previousSummary, analytics, p
   period: string;
   onPeriodChange: (value: string) => void;
   onOpenSettings: () => void;
+  onNavigate: (value: SectionId) => void;
 }) {
+  const [chartMetric, setChartMetric] = useState<"revenue" | "orders" | "profit">("revenue");
+  const [planRevenue, setPlanRevenue] = useState("");
   const readyReports = reports.filter((report) => report.status === "ready");
   const errorReports = reports.length - readyReports.length;
   const sourceTypes = new Set(readyReports.map((report) => report.analytics?.kind).filter((kind) => kind && kind !== "generic")).size;
   const bounds = periodBounds(period);
+  const hasSales = readyReports.some((report) => report.analytics?.kind === "sales" || report.analytics?.kind === "orders");
+  const hasOrders = readyReports.some((report) => report.analytics?.kind === "orders" || report.analytics?.kind === "sales");
+  const hasCatalog = readyReports.some((report) => report.analytics?.kind === "catalog" || report.analytics?.kind === "sales");
+  const hasAds = readyReports.some((report) => report.analytics?.kind === "ads");
+  const previousHasSales = previousAnalytics.metrics.revenue > 0;
+  const previousHasOrders = previousAnalytics.metrics.orders > 0;
   const drr = analytics.metrics.adRevenue > 0 ? analytics.metrics.adSpend / analytics.metrics.adRevenue * 100 : 0;
-  const soldProducts = analytics.products.filter((product) => product.orders > 0).length;
+  const previousDrr = previousAnalytics.metrics.adRevenue > 0 ? previousAnalytics.metrics.adSpend / previousAnalytics.metrics.adRevenue * 100 : null;
+  const ctr = analytics.metrics.impressions > 0 ? analytics.metrics.clicks / analytics.metrics.impressions * 100 : null;
+  const roas = analytics.metrics.adSpend > 0 ? analytics.metrics.adRevenue / analytics.metrics.adSpend : null;
   const lowStock = analytics.products.filter((product) => product.orders > 0 && (product.stock === 0 || (product.days > 0 && product.days <= 7))).length;
-  const attention = errorReports + pendingAnalysis + lowStock + (drr > 18 ? 1 : 0);
   const hasData = summary.files > 0;
   const periodNote = bounds ? `${new Date(`${bounds.start}T00:00:00`).toLocaleDateString("ru-RU")} — ${new Date(`${bounds.end}T00:00:00`).toLocaleDateString("ru-RU")}` : "Все доступные даты";
+  const planKey = `sellerscope-month-plan-v1:${marketplace}:${period}`;
+  useEffect(() => {
+    const timer = window.setTimeout(() => setPlanRevenue(window.localStorage.getItem(planKey) ?? ""), 0);
+    return () => window.clearTimeout(timer);
+  }, [planKey]);
+  const savePlan = (value: string) => {
+    const normalized = value.replace(/[^\d]/g, "");
+    setPlanRevenue(normalized);
+    if (normalized) window.localStorage.setItem(planKey, normalized);
+    else window.localStorage.removeItem(planKey);
+  };
+  const plan = Number(planRevenue) || 0;
+  const planProgress = plan > 0 && hasSales ? Math.min(100, summary.revenue / plan * 100) : null;
+  const chartData = analytics.daily.map((point, index) => ({
+    ...point,
+    current: chartMetric === "revenue" ? point.sales : chartMetric === "orders" ? point.orders : null,
+    previous: chartMetric === "revenue" ? previousAnalytics.daily[index]?.sales ?? null : chartMetric === "orders" ? previousAnalytics.daily[index]?.orders ?? null : null,
+  }));
+  const chartAvailable = chartMetric !== "profit" && chartData.length > 0;
+  const previousProducts = new Map(previousAnalytics.products.map((product) => [product.sku, product]));
+  const topProducts = analytics.products.filter((product) => product.revenue > 0).slice(0, 5);
+  const attentionItems = [
+    ...(errorReports || pendingAnalysis ? [{ tone: "red", icon: "!", title: "Проверьте загруженные файлы", text: `${errorReports + pendingAnalysis} файлов требуют внимания`, section: "settings" as SectionId }] : []),
+    ...(hasAds && drr > 18 ? [{ tone: "red", icon: "↘", title: `ДРР вырос до ${drr.toFixed(1).replace(".", ",")}%`, text: "Проверьте кампании с наибольшими расходами", section: "ads" as SectionId }] : []),
+    ...(lowStock ? [{ tone: "orange", icon: "□", title: `Низкий остаток: ${lowStock} SKU`, text: "Пополните товары с активными продажами", section: "stocks" as SectionId }] : []),
+    ...(!hasSales ? [{ tone: "purple", icon: "⇧", title: "Нет отчёта о продажах", text: "Загрузите продажи для расчёта основных показателей", section: "settings" as SectionId }] : []),
+    ...(!hasAds ? [{ tone: "purple", icon: "◎", title: "Нет рекламного отчёта", text: "Загрузите продвижение для расчёта ДРР", section: "settings" as SectionId }] : []),
+    ...(!hasCatalog ? [{ tone: "orange", icon: "◇", title: "Нет актуальных остатков", text: "Загрузите каталог или отчёт по складам", section: "settings" as SectionId }] : []),
+  ].slice(0, 3);
+  const todayItems = [
+    ...(errorReports || pendingAnalysis ? [{ text: "Проверить файлы с ошибками", section: "settings" as SectionId }] : []),
+    ...(lowStock ? [{ text: `Пополнить остатки для ${lowStock} SKU`, section: "stocks" as SectionId }] : []),
+    ...(hasAds && drr > 18 ? [{ text: "Проверить рекламные кампании с высоким ДРР", section: "ads" as SectionId }] : []),
+    ...(!hasSales ? [{ text: "Загрузить отчёт о продажах", section: "settings" as SectionId }] : []),
+    ...(!hasCatalog ? [{ text: "Загрузить отчёт об остатках", section: "settings" as SectionId }] : []),
+    ...(!hasAds ? [{ text: "Загрузить рекламный отчёт", section: "settings" as SectionId }] : []),
+  ].slice(0, 4);
+  const latestReport = readyReports[0];
 
   return (
-    <div className="control-overview">
-      <section className="overview-status-row" aria-label="Состояние данных">
-        <Status tone={errorReports || pendingAnalysis ? "warn" : hasData ? "ok" : "muted"}>{hasData ? "Данные загружены" : "Шаблон пуст"}</Status>
-        <span>{sourceTypes} источника · {analytics.products.length} SKU</span>
-        <span>Период: {periodNote}</span>
-        <span>Валюта: RUB</span>
+    <div className="control-overview overview-v2">
+      <section className="overview-commandbar" aria-label="Период и состояние данных">
+        <div><span className={`overview-live-dot ${hasData ? "is-live" : ""}`}/><b>{hasData ? "Данные загружены" : "Данные не загружены"}</b><small>{sourceTypes} источника · {analytics.products.length} SKU</small></div>
+        <label><span>Период</span><select value={period} onChange={(event) => onPeriodChange(event.target.value)}>{periodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+        <span className="overview-period-copy">{periodNote}</span>
+        <button type="button" onClick={onOpenSettings}>Управление отчётами</button>
       </section>
 
-      <section className="overview-period-panel" aria-label="Выбор периода">
-        <div className="overview-period-presets">
-          <button className={period === "2026-11" ? "active" : ""} onClick={() => onPeriodChange("2026-11")}>Ноябрь</button>
-          <button className={period === "2026-10" ? "active" : ""} onClick={() => onPeriodChange("2026-10")}>Октябрь</button>
-          <button className={period === "all" ? "active" : ""} onClick={() => onPeriodChange("all")}>Все даты</button>
-          <label className={!(["2026-11", "2026-10", "all"].includes(period)) ? "active" : ""}>Свой период
-            <select value={period === "all" ? "2026-10" : period} onChange={(event) => onPeriodChange(event.target.value)} aria-label="Выбрать свой период">
-              {periodOptions.filter((option) => option.value !== "all").map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
-          </label>
-        </div>
-        <div className="overview-date-range" aria-label="Диапазон дат">
-          <span>{bounds?.start ? new Date(`${bounds.start}T00:00:00`).toLocaleDateString("ru-RU") : "Начало"}</span>
-          <i>—</i>
-          <span>{bounds?.end ? new Date(`${bounds.end}T00:00:00`).toLocaleDateString("ru-RU") : "Сегодня"}</span>
-        </div>
+      <section className="summary-card-grid overview-summary-grid" aria-label="Ключевые показатели">
+        <SummaryCard tone="purple" icon="revenue" comparison={hasSales && previousHasSales ? percentChange(summary.revenue, previousSummary.revenue) : null} label="Выручка" value={hasSales ? money.format(summary.revenue) : "Нет данных"} note={hasSales ? "По отчёту выбранного периода" : "Загрузите отчёт о продажах"} />
+        <SummaryCard tone="blue" icon="orders" comparison={hasOrders && previousHasOrders ? percentChange(summary.orders, previousSummary.orders) : null} label="Заказы" value={hasOrders ? `${number.format(summary.orders)} шт.` : "Нет данных"} note={hasOrders ? "Размещённые заказы" : "Загрузите отчёт о заказах"} />
+        <SummaryCard tone="green" icon="buyouts" comparison={hasOrders && previousAnalytics.metrics.delivered > 0 ? percentChange(analytics.metrics.delivered, previousAnalytics.metrics.delivered) : null} label="Выкупы" value={hasOrders ? `${number.format(analytics.metrics.delivered)} шт.` : "Нет данных"} note={hasOrders ? "По подтверждённым доставкам" : "Нужны статусы заказов"} />
+        <SummaryCard tone="cyan" icon="profit" comparison={null} label="Прибыль" value="Нет данных" note="Нужны финансы и себестоимость" comparisonLabel="расчёт недоступен" />
+        <SummaryCard tone="orange" icon="margin" comparison={null} label="Маржа" value="Нет данных" note="Рассчитается вместе с прибылью" comparisonLabel="расчёт недоступен" />
+        <SummaryCard tone="red" icon="ads" comparison={hasAds && previousAnalytics.metrics.adSpend > 0 ? percentChange(analytics.metrics.adSpend, previousAnalytics.metrics.adSpend) : null} label="Реклама" value={hasAds ? money.format(analytics.metrics.adSpend) : "Нет данных"} note={hasAds ? `ДРР ${drr.toFixed(1).replace(".", ",")}%` : "Загрузите рекламный отчёт"} inverse />
       </section>
 
-      <section className={`report-readiness ${errorReports || pendingAnalysis ? "has-warning" : ""}`}>
-        <div><b>Отчёты {marketplaceMeta[marketplace].name}: {readyReports.length} из {reports.length || 0} обработано</b><span>{sourceTypes} типа данных · {summary.rows.toLocaleString("ru-RU")} строк</span></div>
-        <button onClick={onOpenSettings}>{errorReports || pendingAnalysis ? "Проверить файлы и ошибки" : "Управление отчётами"} ↗</button>
+      <section className="overview-primary-grid">
+        <article className="overview-work-panel overview-dynamics">
+          <div className="overview-panel-head"><div><h3>Динамика бизнеса</h3><p>Текущий и предыдущий сопоставимый месяц</p></div><div className="overview-metric-switch" role="group" aria-label="Показатель графика">{([ ["revenue", "Выручка"], ["orders", "Заказы"], ["profit", "Прибыль"] ] as const).map(([key, label]) => <button type="button" key={key} className={chartMetric === key ? "active" : ""} aria-pressed={chartMetric === key} onClick={() => setChartMetric(key)}>{label}</button>)}</div></div>
+          {chartAvailable ? <div className="overview-chart"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={chartData} margin={{ top: 12, right: 12, left: 4, bottom: 0 }}><defs><linearGradient id="overviewArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#9b4dff" stopOpacity={0.62}/><stop offset="100%" stopColor="#9b4dff" stopOpacity={0.03}/></linearGradient></defs><CartesianGrid stroke="#262b4a" vertical={false}/><XAxis dataKey="day" stroke="#8188a6" axisLine={false} tickLine={false} fontSize={11}/><YAxis stroke="#8188a6" axisLine={false} tickLine={false} fontSize={11} tickFormatter={(value) => chartMetric === "revenue" ? `${Math.round(Number(value) / 1000)}к` : number.format(Number(value))}/><Tooltip formatter={(value) => chartMetric === "revenue" ? money.format(Number(value)) : `${number.format(Number(value))} шт.`} contentStyle={{ background: "#11162d", border: "1px solid #343a63", borderRadius: 12 }}/><Area type="monotone" dataKey="current" name="Текущий период" stroke="#a94cff" strokeWidth={3} fill="url(#overviewArea)" connectNulls/><Line type="monotone" dataKey="previous" name="Прошлый период" stroke="#8a91b5" strokeWidth={2} strokeDasharray="6 7" dot={false} connectNulls/></ComposedChart></ResponsiveContainer></div> : <div className="overview-empty-chart"><SummaryIcon name={chartMetric === "profit" ? "profit" : chartMetric === "orders" ? "orders" : "revenue"}/><b>{chartMetric === "profit" ? "Прибыль пока не рассчитывается" : "Нет данных для графика"}</b><p>{chartMetric === "profit" ? "Загрузите финансовый отчёт и себестоимость проданных товаров." : "Загрузите отчёт с разбивкой по датам."}</p><button type="button" onClick={onOpenSettings}>Загрузить данные</button></div>}
+        </article>
+
+        <aside className="overview-work-panel overview-attention">
+          <div className="overview-panel-head"><div><h3>Что требует внимания</h3><p>Три наиболее важных сигнала</p></div><span>{attentionItems.length}</span></div>
+          <div className="overview-attention-list">{attentionItems.length ? attentionItems.map((item) => <button type="button" key={item.title} onClick={() => onNavigate(item.section)}><i className={`tone-${item.tone}`}>{item.icon}</i><span><b>{item.title}</b><small>{item.text}</small></span><em>›</em></button>) : <div className="overview-clear-state"><b>Критичных сигналов нет</b><p>По загруженным данным всё в пределах заданных правил.</p></div>}</div>
+        </aside>
       </section>
 
-      <section className="summary-card-grid" aria-label="Итоговые показатели">
-        <SummaryCard tone="blue" icon="revenue" comparison={percentChange(summary.revenue, previousSummary.revenue)} label="Выручка" value={money.format(summary.revenue)} note={hasData ? "По начислениям выбранного периода" : "Загрузите отчёт о продажах"} />
-        <SummaryCard tone="green" icon="bonus" comparison={null} label="Баллы и компенсации" value="Нет данных" note="Появятся после финансового отчёта" />
-        <SummaryCard tone="orange" icon="balance" comparison={null} label="Сальдо начислений" value="Нет данных" note="Нужны комиссии, логистика и удержания" />
-        <SummaryCard tone="purple" icon="profit" comparison={null} label="Расчётная прибыль" value="Нет данных" note="Добавьте себестоимость и финансовый отчёт" />
-        <SummaryCard tone="red" icon="ads" comparison={percentChange(analytics.metrics.adSpend, previousAnalytics.metrics.adSpend)} label="Реклама / ДРР" value={analytics.metrics.adSpend ? money.format(analytics.metrics.adSpend) : "0 ₽"} note={analytics.metrics.adSpend ? `ДРР ${drr.toFixed(1)}%` : "Загрузите рекламный отчёт"} />
-        <SummaryCard tone="blue" icon="delivery" comparison={percentChange(summary.orders, previousSummary.orders)} label="Заказано / доставлено" value={`${number.format(summary.orders)} / ${number.format(analytics.metrics.delivered)}`} note={`Отменено ${number.format(analytics.metrics.canceled)} · возвращено ${number.format(analytics.metrics.returned)}`} />
-        <SummaryCard tone="green" icon="catalog" comparison={percentChange(analytics.products.length, previousAnalytics.products.length)} label="Каталог / продажи" value={`${number.format(analytics.products.length)} / ${number.format(soldProducts)}`} note={`${analytics.products.length} SKU в отчётах · ${soldProducts} с продажами`} />
-        <SummaryCard tone="orange" icon="attention" comparison={null} label="Требуют внимания" value={number.format(attention)} note={attention ? "Подтверждённые сигналы по данным" : "Критических сигналов нет"} />
+      <section className="overview-secondary-grid">
+        <article className="overview-work-panel overview-products"><div className="overview-panel-head"><div><h3>Топ-5 товаров по выручке</h3><p>Только товары выбранной площадки</p></div><button type="button" onClick={() => onNavigate("products")}>Все товары</button></div>{topProducts.length ? <div className="overview-product-list">{topProducts.map((product, index) => { const previous = previousProducts.get(product.sku); const change = previous ? percentChange(product.revenue, previous.revenue) : null; return <div key={product.sku}><span>{index + 1}</span><p><b>{product.name}</b><small>{product.sku}</small></p><strong>{money.format(product.revenue)}</strong><em className={change === null ? "neutral" : change >= 0 ? "positive" : "negative"}>{change === null ? "—" : `${change >= 0 ? "+" : ""}${change.toFixed(1).replace(".", ",")}%`}</em></div>; })}</div> : <div className="overview-small-empty"><b>Нет данных о товарах</b><p>Загрузите отчёт о продажах с артикулами SKU.</p></div>}</article>
+
+        <article className="overview-work-panel overview-ads"><div className="overview-panel-head"><div><h3>Эффективность рекламы</h3><p>Атрибуция {marketplaceMeta[marketplace].name}</p></div><button type="button" onClick={() => onNavigate("ads")}>Подробнее</button></div>{hasAds ? <dl><div><dt>Расход</dt><dd>{money.format(analytics.metrics.adSpend)}</dd></div><div><dt>Показы</dt><dd>{number.format(analytics.metrics.impressions)}</dd></div><div><dt>Клики</dt><dd>{number.format(analytics.metrics.clicks)}</dd></div><div><dt>CTR</dt><dd>{ctr === null ? "Нет данных" : `${ctr.toFixed(2).replace(".", ",")}%`}</dd></div><div><dt>ROAS</dt><dd>{roas === null ? "Нет данных" : roas.toFixed(2).replace(".", ",")}</dd></div><div><dt>ДРР</dt><dd className={drr > 18 ? "negative" : "positive"}>{drr.toFixed(1).replace(".", ",")}%{previousDrr === null ? "" : ` · ${drr - previousDrr >= 0 ? "+" : ""}${(drr - previousDrr).toFixed(1).replace(".", ",")} п.п.`}</dd></div></dl> : <div className="overview-small-empty"><b>Нет рекламных данных</b><p>Загрузите отчёт продвижения для расчёта ДРР, CTR и ROAS.</p></div>}</article>
+
+        <article className="overview-work-panel overview-plan"><div className="overview-panel-head"><div><h3>План-факт месяца</h3><p>{period === "all" ? "Выберите один месяц" : periodOptions.find((item) => item.value === period)?.label}</p></div>{planProgress !== null && <span>{planProgress.toFixed(1).replace(".", ",")}%</span>}</div><label><span>План выручки</span><div><input inputMode="numeric" value={planRevenue} onChange={(event) => savePlan(event.target.value)} placeholder="Введите сумму"/><i>₽</i></div></label><div className="overview-plan-row"><span>Факт</span><b>{hasSales ? money.format(summary.revenue) : "Нет данных"}</b></div><div className="overview-plan-track"><i style={{ width: `${planProgress ?? 0}%` }}/></div><p>{plan ? (hasSales ? `До плана осталось ${money.format(Math.max(0, plan - summary.revenue))}` : "Загрузите продажи, чтобы увидеть выполнение плана") : "Введите реальный план — он сохранится только в этом браузере."}</p></article>
+
+        <article className="overview-work-panel overview-today"><div className="overview-panel-head"><div><h3>Что сделать сегодня</h3><p>По текущим сигналам</p></div></div>{todayItems.length ? <div className="overview-task-list">{todayItems.map((item) => <button type="button" key={item.text} onClick={() => onNavigate(item.section)}><i/><span>{item.text}</span><em>›</em></button>)}</div> : <div className="overview-clear-state"><b>Срочных действий нет</b><p>Проверьте актуальность отчётов перед следующим рабочим днём.</p></div>}</article>
       </section>
+
+      <footer className="overview-freshness"><div><span className={`overview-live-dot ${hasData ? "is-live" : ""}`}/><b>{hasData ? "Состояние данных" : "Ожидаются данные"}</b></div><span>Обновлено: {latestReport?.uploadedAt ?? "не обновлялось"}</span><span>Продажи: {hasSales ? "загружены" : "нет отчёта"}</span><span>Остатки: {hasCatalog ? "загружены" : "нет отчёта"}</span><span>Реклама: {hasAds ? "загружена" : "нет отчёта"}</span><button type="button" onClick={onOpenSettings}>Обновить данные</button></footer>
     </div>
   );
 }
@@ -881,7 +931,7 @@ export function Dashboard() {
           {pendingAnalysis > 0 && <div className="notice reimport-notice"><span>!</span><div><b>Обновите анализ ранее загруженных файлов</b><p>Загрузите те же отчёты повторно в разделе «Источники данных». Старые записи заменятся автоматически, а графики, товары, реклама и остатки заполнятся.</p></div><button className="primary-button" onClick={()=>go("settings")}>К загрузке</button></div>}
           <div className="report-stack">
             <ReportSection id="overview" title="Обзор" subtitle="Главные показатели и готовность данных за выбранный период">
-              <OverviewDashboard marketplace={marketplace} summary={summary} previousSummary={previousSummary} analytics={viewAnalytics} previousAnalytics={previousAnalytics} reports={periodReports} pendingAnalysis={pendingAnalysis} period={period} onPeriodChange={setPeriod} onOpenSettings={()=>go("settings")} />
+              <OverviewDashboard marketplace={marketplace} summary={summary} previousSummary={previousSummary} analytics={viewAnalytics} previousAnalytics={previousAnalytics} reports={periodReports} pendingAnalysis={pendingAnalysis} period={period} onPeriodChange={setPeriod} onOpenSettings={()=>go("settings")} onNavigate={go} />
             </ReportSection>
             <ReportSection id="sales" title={titles.sales.title} subtitle={titles.sales.subtitle}><Sales marketplace={marketplace} summary={summary} analytics={analytics} /></ReportSection>
             <ReportSection id="products" title={titles.products.title} subtitle={titles.products.subtitle}><Products marketplace={marketplace} analytics={viewAnalytics} onAddProduct={addManualProduct} /></ReportSection>
@@ -898,3 +948,4 @@ export function Dashboard() {
     </div>
   );
 }
+
