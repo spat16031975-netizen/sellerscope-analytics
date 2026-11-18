@@ -1,0 +1,9 @@
+node_modules
+.next
+.next-verify
+.env
+.env.*
+!.env.example
+coverage
+*.log
+*.tsbuildinfo

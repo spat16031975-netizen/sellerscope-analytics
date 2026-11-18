@@ -1,0 +1,462 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ServiceRole {
+  SERVICE_ADMIN
+  USER
+}
+
+enum OrganizationRole {
+  OWNER
+  ANALYST
+  VIEWER
+}
+
+enum Marketplace {
+  WILDBERRIES
+  OZON
+}
+
+enum ConnectorKind {
+  WB_SELLER
+  WB_PROMOTION
+  OZON_SELLER
+  OZON_PERFORMANCE
+}
+
+enum ConnectionStatus {
+  PENDING
+  ACTIVE
+  DEGRADED
+  EXPIRED
+  REVOKED
+  DISABLED
+}
+
+enum SyncStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  PARTIAL
+  FAILED
+  CANCELLED
+}
+
+enum SyncResource {
+  PRODUCTS
+  ORDERS
+  SALES
+  RETURNS
+  FINANCE
+  AD_CAMPAIGNS
+  AD_STATS
+  STOCKS
+  STOCK_SNAPSHOT
+}
+
+enum OrderStatus {
+  PLACED
+  PROCESSING
+  CANCELLED
+  FULFILLED
+  UNKNOWN
+}
+
+enum SaleEventType {
+  SALE
+  RETURN
+  CORRECTION
+}
+
+enum FinanceType {
+  REVENUE
+  COMMISSION
+  LOGISTICS
+  ADVERTISING
+  STORAGE
+  ACCEPTANCE
+  PENALTY
+  COMPENSATION
+  OTHER
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+model User {
+  id          String       @id @default(cuid())
+  email       String       @unique
+  name        String?
+  passwordHash String?
+  serviceRole ServiceRole  @default(USER)
+  sessions    Session[]
+  memberships Membership[]
+  auditEvents AuditEvent[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([userId, expiresAt])
+}
+
+model Organization {
+  id            String       @id @default(cuid())
+  name          String
+  currency      String       @default("RUB")
+  timezone      String       @default("Europe/Moscow")
+  memberships   Membership[]
+  stores        Store[]
+  products      Product[]
+  skuMappings   SkuMapping[]
+  plans         Plan[]
+  costEntries   CostEntry[]
+  alerts        Alert[]
+  alertRules    AlertRule[]
+  auditEvents   AuditEvent[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Membership {
+  id             String           @id @default(cuid())
+  organizationId String
+  userId         String
+  role           OrganizationRole
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime         @default(now())
+  @@unique([organizationId, userId])
+  @@index([userId])
+}
+
+model Store {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  marketplace    Marketplace
+  externalId     String?
+  active         Boolean      @default(true)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connections    Connection[]
+  products       StoreProduct[]
+  orders         Order[]
+  saleEvents     SaleEvent[]
+  financeOps     FinanceOperation[]
+  adCampaigns    AdCampaign[]
+  stockSnapshots StockSnapshot[]
+  syncJobs       SyncJob[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  @@unique([organizationId, marketplace, externalId])
+  @@index([organizationId, active])
+}
+
+model Connection {
+  id                  String           @id @default(cuid())
+  storeId             String
+  kind                ConnectorKind
+  status              ConnectionStatus @default(PENDING)
+  encryptedCredential Bytes
+  credentialKeyId     String
+  scopes              String[]
+  expiresAt           DateTime?
+  lastSuccessAt       DateTime?
+  lastAttemptAt       DateTime?
+  sourceVersion       String?
+  store               Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  syncJobs            SyncJob[]
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  @@unique([storeId, kind])
+}
+
+model Product {
+  id             String       @id @default(cuid())
+  organizationId String
+  sellerSku      String
+  name           String
+  category       String?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  storeProducts  StoreProduct[]
+  mappingsFrom   SkuMapping[] @relation("MappingFrom")
+  mappingsTo     SkuMapping[] @relation("MappingTo")
+  orderItems     OrderItem[]
+  saleEvents     SaleEvent[]
+  stockSnapshots StockSnapshot[]
+  adStats        AdStat[]
+  costEntries    CostEntry[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@unique([organizationId, sellerSku])
+  @@index([organizationId, name])
+}
+
+model StoreProduct {
+  id           String      @id @default(cuid())
+  storeId      String
+  productId    String
+  externalId   String
+  offerId      String?
+  barcode      String?
+  raw          Json?
+  store        Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product      Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  @@unique([storeId, externalId])
+  @@index([productId])
+}
+
+model SkuMapping {
+  id             String       @id @default(cuid())
+  organizationId String
+  fromProductId  String
+  toProductId    String
+  confirmedBy    String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  fromProduct    Product      @relation("MappingFrom", fields: [fromProductId], references: [id], onDelete: Cascade)
+  toProduct      Product      @relation("MappingTo", fields: [toProductId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  @@unique([organizationId, fromProductId, toProductId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  storeId         String
+  externalId      String
+  status          OrderStatus
+  orderedAt       DateTime
+  currency        String
+  grossAmount     Decimal?    @db.Decimal(18, 4)
+  sourceUpdatedAt DateTime?
+  fetchedAt       DateTime
+  transformVersion String
+  raw             Json
+  store           Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  items           OrderItem[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@unique([storeId, externalId])
+  @@index([storeId, orderedAt])
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  productId  String?
+  externalId String
+  quantity   Int
+  unitPrice  Decimal? @db.Decimal(18, 4)
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product    Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  @@unique([orderId, externalId])
+}
+
+model SaleEvent {
+  id               String        @id @default(cuid())
+  storeId          String
+  productId        String?
+  externalId       String
+  type             SaleEventType
+  occurredAt       DateTime
+  currency         String
+  quantity         Int
+  amount           Decimal?      @db.Decimal(18, 4)
+  sourceUpdatedAt  DateTime?
+  fetchedAt        DateTime
+  transformVersion String
+  raw              Json
+  store            Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product          Product?       @relation(fields: [productId], references: [id], onDelete: SetNull)
+  @@unique([storeId, externalId, type])
+  @@index([storeId, occurredAt, type])
+}
+
+model FinanceOperation {
+  id               String      @id @default(cuid())
+  storeId          String
+  externalId       String
+  type             FinanceType
+  occurredAt       DateTime
+  currency         String
+  amount           Decimal     @db.Decimal(18, 4)
+  sourceDocumentId String?
+  adDeduplicationKey String?
+  fetchedAt        DateTime
+  transformVersion String
+  raw              Json
+  store            Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  @@unique([storeId, externalId])
+  @@index([storeId, occurredAt, type])
+  @@index([adDeduplicationKey])
+}
+
+model AdCampaign {
+  id           String   @id @default(cuid())
+  storeId      String
+  externalId   String
+  name         String
+  attributionModel String?
+  status       String
+  budget       Decimal? @db.Decimal(18, 4)
+  currency     String
+  raw          Json
+  store        Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  stats        AdStat[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  @@unique([storeId, externalId])
+}
+
+model AdStat {
+  id                String     @id @default(cuid())
+  campaignId        String
+  productId         String?
+  date              DateTime   @db.Date
+  impressions       BigInt?
+  clicks            BigInt?
+  spend             Decimal?   @db.Decimal(18, 4)
+  attributedRevenue Decimal?   @db.Decimal(18, 4)
+  attributedOrders  Int?
+  currency          String
+  fetchedAt         DateTime
+  transformVersion  String
+  raw               Json
+  campaign          AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  product           Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
+  @@unique([campaignId, productId, date])
+  @@index([date])
+}
+
+model StockSnapshot {
+  id               String   @id @default(cuid())
+  storeId          String
+  productId        String
+  warehouseId      String
+  warehouseName    String?
+  fulfillmentScheme String?
+  capturedAt       DateTime
+  available        Int?
+  reserved         Int?
+  inTransit        Int?
+  returning        Int?
+  fetchedAt        DateTime
+  transformVersion String
+  raw              Json
+  store            Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@unique([storeId, productId, warehouseId, capturedAt])
+  @@index([storeId, capturedAt])
+}
+
+model CostEntry {
+  id             String       @id @default(cuid())
+  organizationId String
+  productId      String?
+  validFrom      DateTime     @db.Date
+  validTo        DateTime?    @db.Date
+  amount         Decimal      @db.Decimal(18, 4)
+  currency       String
+  source         String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product        Product?     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  @@index([organizationId, productId, validFrom])
+}
+
+model Plan {
+  id             String       @id @default(cuid())
+  organizationId String
+  periodStart    DateTime     @db.Date
+  periodEnd      DateTime     @db.Date
+  metric         String
+  value          Decimal      @db.Decimal(18, 4)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  @@unique([organizationId, periodStart, periodEnd, metric])
+}
+
+model AlertRule {
+  id             String       @id @default(cuid())
+  organizationId String
+  code           String
+  active         Boolean      @default(true)
+  config         Json
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  @@unique([organizationId, code])
+}
+
+model Alert {
+  id             String        @id @default(cuid())
+  organizationId String
+  deduplicationKey String
+  severity       AlertSeverity
+  title          String
+  body           String
+  dataComplete   Boolean
+  firstSeenAt    DateTime      @default(now())
+  lastSeenAt     DateTime      @default(now())
+  readAt         DateTime?
+  resolvedAt     DateTime?
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  @@unique([organizationId, deduplicationKey])
+  @@index([organizationId, readAt, resolvedAt])
+}
+
+model SyncJob {
+  id             String       @id @default(cuid())
+  storeId        String
+  connectionId   String
+  resource       SyncResource
+  status         SyncStatus   @default(QUEUED)
+  idempotencyKey String       @unique
+  cursor         Json?
+  rangeStart     DateTime?
+  rangeEnd       DateTime?
+  attempt        Int          @default(0)
+  nextAttemptAt  DateTime?
+  sourceFreshAt  DateTime?
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  recordsRead    Int          @default(0)
+  recordsWritten Int          @default(0)
+  errorCode      String?
+  errorMessage   String?
+  store          Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  connection     Connection   @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  @@index([status, nextAttemptAt])
+  @@index([storeId, resource, createdAt])
+}
+
+model AuditEvent {
+  id             String        @id @default(cuid())
+  organizationId String?
+  userId         String?
+  action         String
+  entityType     String
+  entityId       String?
+  metadata       Json?
+  ipHash         String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now())
+  @@index([organizationId, createdAt])
+}

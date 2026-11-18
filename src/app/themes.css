@@ -1,0 +1,502 @@
+/* Five visual directions share one product model and interaction layer. */
+
+.theme-picker {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin-right: 12px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+}
+
+.theme-picker button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.theme-picker button.active {
+  color: #0b0b0c;
+  background: var(--theme-accent, #e8ff1f);
+  box-shadow: 0 5px 18px color-mix(in srgb, var(--theme-accent, #e8ff1f) 30%, transparent);
+}
+
+.variant-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  color: var(--muted);
+}
+
+.variant-label span {
+  padding: 6px 9px;
+  border-radius: 12px;
+  color: #0b0b0c;
+  background: var(--theme-accent, #e8ff1f);
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.variant-label b { color: var(--text); font-size: 12px; }
+.variant-label small { margin-left: auto; font-size: 9px; }
+.reference-bento { margin: -8px -8px 0; }
+
+/* 1. Finance Bento — the 21st.dev reference direction. */
+.app-shell[data-theme="bento"] {
+  --bg: #000;
+  --panel: #111113;
+  --panel-2: #18181b;
+  --line: rgba(255,255,255,.12);
+  --text: #fff;
+  --muted: rgba(255,255,255,.5);
+  --blue: #a9b2ff;
+  --purple: #9f8cff;
+  --green: #e8ff1f;
+  --orange: #ffb37a;
+  --red: #ff2a85;
+  --theme-accent: #e8ff1f;
+  background: #000;
+}
+
+.app-shell[data-theme="bento"] .sidebar,
+.app-shell[data-theme="bento"] .topbar,
+.app-shell[data-theme="bento"] .mobile-nav { background: rgba(0,0,0,.94); }
+.app-shell[data-theme="bento"] main { max-width: 1480px; }
+.app-shell[data-theme="bento"] .panel,
+.app-shell[data-theme="bento"] .kpi,
+.app-shell[data-theme="bento"] .insight-strip,
+.app-shell[data-theme="bento"] .profit-bridge .bridge-item {
+  border-radius: 28px;
+  border-color: rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.11);
+}
+.app-shell[data-theme="bento"] .kpi { min-height: 155px; padding: 23px; }
+.app-shell[data-theme="bento"] .kpi::before { display: none; }
+.app-shell[data-theme="bento"] .kpi-accent { background: linear-gradient(180deg,#b9a6ff,#2e43ff 40%,#6d7dff); }
+.app-shell[data-theme="bento"] .kpi-positive { color: #0b0b0c; background: linear-gradient(180deg,#f4ffb8,#a3c400 58%,#c9e03a); }
+.app-shell[data-theme="bento"] .kpi-positive p,
+.app-shell[data-theme="bento"] .kpi-positive > div { color: rgba(0,0,0,.58); }
+.app-shell[data-theme="bento"] .kpi-orange { background: linear-gradient(180deg,#f6bf96,#c2683a 45%,#dc8a5c); }
+.app-shell[data-theme="bento"] .kpi-purple { background: linear-gradient(180deg,#d6c7ff,#765cff 45%,#9f8cff); }
+.app-shell[data-theme="bento"] .kpi-warning,
+.app-shell[data-theme="bento"] .kpi-red { background: linear-gradient(180deg,#ffb3d6,#ff2a85 45%,#ff6aa8); }
+.app-shell[data-theme="bento"] .summary-card::before,
+.app-shell[data-theme="bento"] .summary-card::after { display:none; }
+.app-shell[data-theme="bento"] .summary-card-blue,
+.app-shell[data-theme="bento"] .finance-tone-blue { background:linear-gradient(180deg,#b9a6ff,#2e43ff 45%,#6d7dff); }
+.app-shell[data-theme="bento"] .summary-card-green,
+.app-shell[data-theme="bento"] .finance-tone-lime { color:#0b0b0c; background:linear-gradient(180deg,#f4ffb8,#a3c400 58%,#c9e03a); }
+.app-shell[data-theme="bento"] .summary-card-orange,
+.app-shell[data-theme="bento"] .finance-tone-orange { background:linear-gradient(180deg,#f6bf96,#c2683a 45%,#dc8a5c); }
+.app-shell[data-theme="bento"] .summary-card-purple,
+.app-shell[data-theme="bento"] .finance-tone-purple { background:linear-gradient(180deg,#d6c7ff,#765cff 45%,#9f8cff); }
+.app-shell[data-theme="bento"] .summary-card-red,
+.app-shell[data-theme="bento"] .finance-tone-pink { background:linear-gradient(180deg,#ffb3d6,#ff2a85 45%,#ff6aa8); }
+.app-shell[data-theme="bento"] .summary-card { color:#fff; }
+.app-shell[data-theme="bento"] .summary-card strong { color:inherit; }
+.app-shell[data-theme="bento"] .summary-card > span,
+.app-shell[data-theme="bento"] .summary-card p,
+.app-shell[data-theme="bento"] .finance-tone-blue span,
+.app-shell[data-theme="bento"] .finance-tone-blue small,
+.app-shell[data-theme="bento"] .finance-tone-orange span,
+.app-shell[data-theme="bento"] .finance-tone-orange small,
+.app-shell[data-theme="bento"] .finance-tone-purple span,
+.app-shell[data-theme="bento"] .finance-tone-purple small,
+.app-shell[data-theme="bento"] .finance-tone-pink span,
+.app-shell[data-theme="bento"] .finance-tone-pink small { color:rgba(255,255,255,.68); }
+.app-shell[data-theme="bento"] .summary-card-green > span,
+.app-shell[data-theme="bento"] .summary-card-green p,
+.app-shell[data-theme="bento"] .finance-tone-lime span,
+.app-shell[data-theme="bento"] .finance-tone-lime small { color:rgba(0,0,0,.58); }
+.app-shell[data-theme="bento"] .finance-tone-blue,
+.app-shell[data-theme="bento"] .finance-tone-orange,
+.app-shell[data-theme="bento"] .finance-tone-purple,
+.app-shell[data-theme="bento"] .finance-tone-pink { color:#fff; }
+.app-shell[data-theme="bento"] .profit-bridge .finance-tone-blue { background:linear-gradient(180deg,#b9a6ff,#2e43ff 45%,#6d7dff); }
+.app-shell[data-theme="bento"] .profit-bridge .finance-tone-lime { color:#0b0b0c; background:linear-gradient(180deg,#f4ffb8,#a3c400 58%,#c9e03a); }
+.app-shell[data-theme="bento"] .profit-bridge .finance-tone-orange { background:linear-gradient(180deg,#f6bf96,#c2683a 45%,#dc8a5c); }
+.app-shell[data-theme="bento"] .profit-bridge .finance-tone-purple { background:linear-gradient(180deg,#d6c7ff,#765cff 45%,#9f8cff); }
+.app-shell[data-theme="bento"] .profit-bridge .finance-tone-pink { background:linear-gradient(180deg,#ffb3d6,#ff2a85 45%,#ff6aa8); }
+.app-shell[data-theme="bento"] .profit-bridge .finance-tone-blue b,
+.app-shell[data-theme="bento"] .profit-bridge .finance-tone-lime b,
+.app-shell[data-theme="bento"] .profit-bridge .finance-tone-orange b,
+.app-shell[data-theme="bento"] .profit-bridge .finance-tone-purple b,
+.app-shell[data-theme="bento"] .profit-bridge .finance-tone-pink b { color:inherit; }
+.app-shell[data-theme="bento"] .kpi { min-height:185px; }
+.app-shell[data-theme="bento"] .summary-card { min-height:190px; }
+.app-shell[data-theme="bento"] .profit-bridge .bridge-item { min-height:155px; display:flex; flex-direction:column; justify-content:center; }
+.app-shell[data-theme="bento"] .kpi p,
+.app-shell[data-theme="bento"] .kpi > div,
+.app-shell[data-theme="bento"] .summary-card > span,
+.app-shell[data-theme="bento"] .summary-card p,
+.app-shell[data-theme="bento"] .profit-bridge .bridge-item span,
+.app-shell[data-theme="bento"] .profit-bridge .bridge-item small { color:rgba(8,10,22,.82); text-shadow:none; }
+.app-shell[data-theme="bento"] .kpi strong,
+.app-shell[data-theme="bento"] .summary-card strong,
+.app-shell[data-theme="bento"] .profit-bridge .bridge-item b { color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.18); }
+.app-shell[data-theme="bento"] .kpi-positive strong,
+.app-shell[data-theme="bento"] .summary-card-green strong,
+.app-shell[data-theme="bento"] .profit-bridge .finance-tone-lime b { color:#0b0b0c; text-shadow:none; }
+.app-shell[data-theme="bento"] .chart-mode-switch { background:#0b0b0d; }
+.app-shell[data-theme="bento"] .chart-mode-switch button.active { background:#e8ff1f; color:#090a04; }
+.app-shell[data-theme="bento"] .primary-button { background: #e8ff1f; border-color: #e8ff1f; }
+.app-shell[data-theme="bento"] .progress i,
+.app-shell[data-theme="bento"] .breakdown i { background: #e8ff1f; }
+
+/* Рабочая палитра: тёмные плашки с цветом показателя по контуру. */
+.app-shell[data-theme="bento"] .kpi {
+  border: 2px solid var(--kpi-accent);
+  background: linear-gradient(145deg,#0d1119,#05070b);
+  box-shadow: inset 0 0 28px color-mix(in srgb,var(--kpi-accent) 8%,transparent);
+}
+.app-shell[data-theme="bento"] .summary-card {
+  border: 2px solid var(--card-accent);
+  background: linear-gradient(145deg,#0d1119,#05070b);
+  box-shadow: inset 0 0 28px color-mix(in srgb,var(--card-accent) 8%,transparent);
+}
+.app-shell[data-theme="bento"] .kpi p,
+.app-shell[data-theme="bento"] .kpi > div,
+.app-shell[data-theme="bento"] .summary-card > span,
+.app-shell[data-theme="bento"] .summary-card p { color:#b9c6d8; }
+.app-shell[data-theme="bento"] .kpi strong,
+.app-shell[data-theme="bento"] .kpi-positive strong,
+.app-shell[data-theme="bento"] .summary-card strong,
+.app-shell[data-theme="bento"] .summary-card-green strong { color:#fff; text-shadow:none; }
+.app-shell[data-theme="bento"] .profit-bridge .bridge-item {
+  --finance-accent:#377dff;
+  border:2px solid var(--finance-accent);
+  color:#fff;
+  background:linear-gradient(145deg,#0d1119,#05070b);
+  box-shadow:inset 0 0 24px color-mix(in srgb,var(--finance-accent) 8%,transparent);
+}
+.app-shell[data-theme="bento"] .profit-bridge .finance-tone-blue { --finance-accent:#377dff; background:linear-gradient(145deg,#0d1119,#05070b); }
+.app-shell[data-theme="bento"] .profit-bridge .finance-tone-lime { --finance-accent:#c9e03a; color:#fff; background:linear-gradient(145deg,#0d1119,#05070b); }
+.app-shell[data-theme="bento"] .profit-bridge .finance-tone-orange { --finance-accent:#ff9e64; background:linear-gradient(145deg,#0d1119,#05070b); }
+.app-shell[data-theme="bento"] .profit-bridge .finance-tone-purple { --finance-accent:#a879ff; background:linear-gradient(145deg,#0d1119,#05070b); }
+.app-shell[data-theme="bento"] .profit-bridge .finance-tone-pink { --finance-accent:#ff5d9e; background:linear-gradient(145deg,#0d1119,#05070b); }
+.app-shell[data-theme="bento"] .profit-bridge .bridge-item span,
+.app-shell[data-theme="bento"] .profit-bridge .bridge-item small { color:#b9c6d8; }
+.app-shell[data-theme="bento"] .profit-bridge .bridge-item b,
+.app-shell[data-theme="bento"] .profit-bridge .finance-tone-lime b { color:#fff; text-shadow:none; }
+
+/* 2. Neon Infographic — dense, outlined and chromatic. */
+.app-shell[data-theme="neon"] {
+  --bg: #171226;
+  --panel: #201a33;
+  --panel-2: #292140;
+  --line: rgba(216,199,255,.22);
+  --text: #fff9ff;
+  --muted: #a99dbe;
+  --blue: #13c9ff;
+  --purple: #aa35ff;
+  --green: #53f46e;
+  --orange: #ffb000;
+  --red: #ff2c8a;
+  --theme-accent: #ff2c8a;
+  background:
+    radial-gradient(circle at 82% 12%, rgba(182,37,255,.2), transparent 27%),
+    radial-gradient(circle at 20% 90%, rgba(0,210,255,.16), transparent 30%),
+    #171226;
+}
+.app-shell[data-theme="neon"] .sidebar { background: rgba(19,14,34,.92); border-right-color: rgba(255,49,160,.25); }
+.app-shell[data-theme="neon"] .topbar { background: rgba(23,18,38,.9); }
+.app-shell[data-theme="neon"] .brand-mark { border-radius: 50%; border-color: #ff2c8a; box-shadow: 0 0 18px rgba(255,44,138,.4); }
+.app-shell[data-theme="neon"] .panel,
+.app-shell[data-theme="neon"] .kpi,
+.app-shell[data-theme="neon"] .bridge-item,
+.app-shell[data-theme="neon"] .insight-strip {
+  border-radius: 12px;
+  border-color: rgba(255,255,255,.28);
+  background: rgba(30,24,48,.82);
+  box-shadow: inset 0 0 0 1px rgba(0,202,255,.04), 0 18px 40px rgba(4,1,13,.26);
+}
+.app-shell[data-theme="neon"] .kpi { border-top: 3px solid #13c9ff; }
+.app-shell[data-theme="neon"] .kpi:nth-child(2) { border-top-color: #ff2c8a; }
+.app-shell[data-theme="neon"] .kpi:nth-child(3) { border-top-color: #ffb000; }
+.app-shell[data-theme="neon"] .kpi:nth-child(4) { border-top-color: #53f46e; }
+.app-shell[data-theme="neon"] .kpi:nth-child(5) { border-top-color: #aa35ff; }
+.app-shell[data-theme="neon"] .kpi::before { display: none; }
+.app-shell[data-theme="neon"] .score { border-radius: 8px; box-shadow: 0 0 13px currentColor; }
+.app-shell[data-theme="neon"] .primary-button { color:#fff; background: linear-gradient(90deg,#ff2c8a,#aa35ff); border:0; }
+.app-shell[data-theme="neon"] .progress i,
+.app-shell[data-theme="neon"] .breakdown i { background: linear-gradient(90deg,#ffb000,#ff2c8a,#aa35ff,#13c9ff); }
+
+/* 3. Executive Wave — dark teal glass with restrained gold. */
+.app-shell[data-theme="wave"] {
+  --bg: #06161d;
+  --panel: rgba(12,35,44,.72);
+  --panel-2: rgba(20,51,62,.78);
+  --line: rgba(198,234,229,.18);
+  --text: #f5f8f3;
+  --muted: #9fb8b8;
+  --blue: #70c8d7;
+  --purple: #a4c8bd;
+  --green: #7ee2c5;
+  --orange: #e9c780;
+  --red: #fa8f8f;
+  --theme-accent: #e9c780;
+  background:
+    radial-gradient(ellipse at 12% -10%, rgba(15,102,127,.65), transparent 38%),
+    radial-gradient(ellipse at 82% 8%, rgba(236,199,123,.36), transparent 32%),
+    radial-gradient(ellipse at 50% 105%, rgba(19,94,91,.52), transparent 37%),
+    #06161d;
+}
+.app-shell[data-theme="wave"]::before {
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  opacity:.18;
+  background: repeating-radial-gradient(ellipse at 60% 0%, transparent 0 23px, rgba(255,255,255,.22) 24px, transparent 25px 47px);
+}
+.app-shell[data-theme="wave"] .sidebar,
+.app-shell[data-theme="wave"] .topbar { background: rgba(3,20,27,.69); backdrop-filter: blur(22px); }
+.app-shell[data-theme="wave"] .panel,
+.app-shell[data-theme="wave"] .kpi,
+.app-shell[data-theme="wave"] .bridge-item,
+.app-shell[data-theme="wave"] .insight-strip {
+  border-radius: 20px;
+  border-color: rgba(212,238,232,.19);
+  background: linear-gradient(145deg,rgba(30,69,78,.66),rgba(7,25,33,.74));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 22px 55px rgba(0,0,0,.24);
+  backdrop-filter: blur(22px);
+}
+.app-shell[data-theme="wave"] .kpi:nth-child(2n) { background: linear-gradient(145deg,rgba(37,76,93,.72),rgba(7,25,33,.76)); }
+.app-shell[data-theme="wave"] .kpi::before { background: #e9c780; }
+.app-shell[data-theme="wave"] .brand-mark { color:#e9c780; border-color:rgba(233,199,128,.4); }
+.app-shell[data-theme="wave"] .primary-button { color:#122126; background:#e9c780; border-color:#e9c780; }
+.app-shell[data-theme="wave"] .progress i,
+.app-shell[data-theme="wave"] .breakdown i { background: linear-gradient(90deg,#70c8d7,#e9c780); }
+
+/* 4. Ice Glass 3D — bright translucent panels and saturated data objects. */
+.app-shell[data-theme="ice"] {
+  --bg: #eef3ff;
+  --panel: rgba(255,255,255,.68);
+  --panel-2: rgba(242,247,255,.84);
+  --line: rgba(102,133,194,.2);
+  --text: #172441;
+  --muted: #6f7c9b;
+  --blue: #1789ff;
+  --purple: #8b35ff;
+  --green: #0ebf9c;
+  --orange: #ff9d2e;
+  --red: #ff4f86;
+  --theme-accent: #19a7ff;
+  background:
+    radial-gradient(circle at 15% 18%, rgba(137,53,255,.16), transparent 25%),
+    radial-gradient(circle at 85% 72%, rgba(0,211,255,.2), transparent 28%),
+    linear-gradient(145deg,#f9fbff,#e9efff 58%,#f6f2ff);
+  color: var(--text);
+}
+.app-shell[data-theme="ice"] .sidebar,
+.app-shell[data-theme="ice"] .topbar,
+.app-shell[data-theme="ice"] .mobile-nav { background: rgba(245,249,255,.76); backdrop-filter: blur(26px) saturate(1.3); }
+.app-shell[data-theme="ice"] .sidebar { border-right-color: rgba(92,121,179,.16); }
+.app-shell[data-theme="ice"] .panel,
+.app-shell[data-theme="ice"] .kpi,
+.app-shell[data-theme="ice"] .bridge-item,
+.app-shell[data-theme="ice"] .insight-strip {
+  border-radius: 24px;
+  color: var(--text);
+  border-color: rgba(255,255,255,.94);
+  background: linear-gradient(145deg,rgba(255,255,255,.78),rgba(235,242,255,.62));
+  box-shadow: inset 0 1px 0 #fff, 0 18px 45px rgba(67,92,160,.16), 0 2px 5px rgba(74,106,172,.08);
+  backdrop-filter: blur(24px) saturate(1.35);
+}
+.app-shell[data-theme="ice"] .kpi-accent { background: linear-gradient(145deg,rgba(226,242,255,.96),rgba(205,225,255,.74)); }
+.app-shell[data-theme="ice"] .kpi-positive { background: linear-gradient(145deg,rgba(229,255,247,.95),rgba(206,245,255,.72)); }
+.app-shell[data-theme="ice"] td,
+.app-shell[data-theme="ice"] .alert-row,
+.app-shell[data-theme="ice"] .secondary-button,
+.app-shell[data-theme="ice"] .period select,
+.app-shell[data-theme="ice"] .toolbar-row select,
+.app-shell[data-theme="ice"] .search input { color:var(--text); }
+.app-shell[data-theme="ice"] .secondary-button,
+.app-shell[data-theme="ice"] .period,
+.app-shell[data-theme="ice"] .icon-button,
+.app-shell[data-theme="ice"] .search,
+.app-shell[data-theme="ice"] .toolbar-row select { background:rgba(255,255,255,.62); border-color:rgba(90,121,177,.18); }
+.app-shell[data-theme="ice"] .sidebar nav :is(button,a).active { color:#096cca; background:rgba(38,139,255,.11); }
+.app-shell[data-theme="ice"] .sidebar nav :is(button,a):hover { color:var(--text); background:rgba(255,255,255,.56); }
+.app-shell[data-theme="ice"] .chart-tooltip { background:rgba(255,255,255,.93); color:var(--text); border-color:rgba(77,102,153,.2); }
+.app-shell[data-theme="ice"] .primary-button { color:#fff; background:linear-gradient(145deg,#159cff,#6a64ff); border:0; box-shadow:0 10px 25px rgba(43,116,255,.25); }
+
+/* 5. Soft Commerce — pale blue neumorphism for product operations. */
+.app-shell[data-theme="soft"] {
+  --bg: #eaf2fc;
+  --panel: #edf5ff;
+  --panel-2: #e6f0fc;
+  --line: rgba(121,151,188,.14);
+  --text: #172b4d;
+  --muted: #7185a1;
+  --blue: #2e8cff;
+  --purple: #7c71ff;
+  --green: #17b890;
+  --orange: #f5a623;
+  --red: #ef6179;
+  --theme-accent: #2e8cff;
+  background: #eaf2fc;
+  color:var(--text);
+}
+.app-shell[data-theme="soft"] .sidebar,
+.app-shell[data-theme="soft"] .topbar,
+.app-shell[data-theme="soft"] .mobile-nav { background:#eaf2fc; }
+.app-shell[data-theme="soft"] .sidebar { border:0; box-shadow:12px 0 30px rgba(104,136,174,.11); }
+.app-shell[data-theme="soft"] .panel,
+.app-shell[data-theme="soft"] .kpi,
+.app-shell[data-theme="soft"] .bridge-item,
+.app-shell[data-theme="soft"] .insight-strip {
+  border:0;
+  border-radius:18px;
+  color:var(--text);
+  background:linear-gradient(145deg,#f4f9ff,#e1ecf9);
+  box-shadow: 9px 9px 22px rgba(121,148,178,.18), -9px -9px 22px rgba(255,255,255,.88), inset 1px 1px 0 rgba(255,255,255,.9);
+}
+.app-shell[data-theme="soft"] .kpi::before { display:none; }
+.app-shell[data-theme="soft"] .kpi-accent { background:linear-gradient(145deg,#dcecff,#edf6ff); }
+.app-shell[data-theme="soft"] .kpi-positive { background:linear-gradient(145deg,#e4f9f3,#eef9ff); }
+.app-shell[data-theme="soft"] td,
+.app-shell[data-theme="soft"] .alert-row,
+.app-shell[data-theme="soft"] .secondary-button,
+.app-shell[data-theme="soft"] .period select,
+.app-shell[data-theme="soft"] .toolbar-row select,
+.app-shell[data-theme="soft"] .search input { color:var(--text); }
+.app-shell[data-theme="soft"] .secondary-button,
+.app-shell[data-theme="soft"] .period,
+.app-shell[data-theme="soft"] .icon-button,
+.app-shell[data-theme="soft"] .search,
+.app-shell[data-theme="soft"] .toolbar-row select {
+  background:#eaf2fc;
+  border:0;
+  box-shadow:inset 3px 3px 7px rgba(124,151,182,.16), inset -3px -3px 7px rgba(255,255,255,.9);
+}
+.app-shell[data-theme="soft"] .sidebar nav :is(button,a).active { color:#1672d8; background:#d9eaff; box-shadow:inset 2px 2px 5px rgba(94,126,165,.12); }
+.app-shell[data-theme="soft"] .sidebar nav :is(button,a):hover { color:var(--text); background:#e1edf9; }
+.app-shell[data-theme="soft"] .primary-button { color:#fff; background:#2e8cff; border:0; box-shadow:0 9px 20px rgba(46,140,255,.25); }
+.app-shell[data-theme="soft"] .chart-tooltip { background:#f6faff; color:var(--text); border:0; box-shadow:8px 8px 22px rgba(102,128,160,.18); }
+
+/* 6. Lavender Modular — floating white modules on an indigo workspace. */
+.app-shell[data-theme="lavender"] {
+  --bg: #aaa5ed;
+  --panel: #f7f7ff;
+  --panel-2: #ececff;
+  --line: rgba(79,74,157,.14);
+  --text: #202449;
+  --muted: #777a9b;
+  --blue: #477cf4;
+  --purple: #8b62eb;
+  --green: #08b6a7;
+  --orange: #ffb049;
+  --red: #f05c92;
+  --theme-accent: #516ef0;
+  color:var(--text);
+  background:
+    radial-gradient(circle at 12% 86%, rgba(92,125,245,.5), transparent 30%),
+    radial-gradient(circle at 88% 14%, rgba(219,187,255,.55), transparent 28%),
+    linear-gradient(145deg,#b9b2ef,#929ceb 58%,#c2a9eb);
+}
+.app-shell[data-theme="lavender"] .sidebar {
+  margin:18px 0 18px 18px;
+  height:calc(100vh - 36px);
+  border:0;
+  border-radius:22px;
+  color:#fff;
+  background:linear-gradient(180deg,#3f3b9e,#24236c);
+  box-shadow:0 20px 45px rgba(40,34,112,.34);
+}
+.app-shell[data-theme="lavender"] .workspace { width:calc(100% - 262px); margin-left:262px; }
+.app-shell[data-theme="lavender"] .topbar { background:rgba(179,175,238,.68); border-bottom-color:rgba(255,255,255,.28); backdrop-filter:blur(22px); }
+.app-shell[data-theme="lavender"] .sidebar nav :is(button,a) { color:rgba(255,255,255,.72); }
+.app-shell[data-theme="lavender"] .sidebar nav :is(button,a):hover { color:#fff; background:rgba(255,255,255,.09); }
+.app-shell[data-theme="lavender"] .sidebar nav :is(button,a).active { color:#fff; background:linear-gradient(90deg,#627ff2,#7b69e9); box-shadow:0 8px 22px rgba(24,20,92,.23); }
+.app-shell[data-theme="lavender"] .sidebar nav :is(button,a).active::before { display:none; }
+.app-shell[data-theme="lavender"] .brand small,
+.app-shell[data-theme="lavender"] .sidebar-foot > button,
+.app-shell[data-theme="lavender"] .user small { color:rgba(255,255,255,.58); }
+.app-shell[data-theme="lavender"] .user { border-top-color:rgba(255,255,255,.12); }
+.app-shell[data-theme="lavender"] .panel,
+.app-shell[data-theme="lavender"] .kpi,
+.app-shell[data-theme="lavender"] .bridge-item,
+.app-shell[data-theme="lavender"] .insight-strip {
+  border:1px solid rgba(255,255,255,.84);
+  border-radius:17px;
+  color:var(--text);
+  background:linear-gradient(155deg,rgba(255,255,255,.96),rgba(242,242,255,.9));
+  box-shadow:0 16px 35px rgba(59,53,146,.17), inset 0 1px 0 #fff;
+}
+.app-shell[data-theme="lavender"] .kpi::before { display:none; }
+.app-shell[data-theme="lavender"] .kpi-accent { background:linear-gradient(145deg,#f3f2ff,#e3e9ff); }
+.app-shell[data-theme="lavender"] .kpi-positive { background:linear-gradient(145deg,#efffff,#e7f6ff); }
+.app-shell[data-theme="lavender"] .panel.chart-panel,
+.app-shell[data-theme="lavender"] .pulse-panel { background:linear-gradient(145deg,#42429f,#28296f); color:#fff; border-color:rgba(255,255,255,.16); }
+.app-shell[data-theme="lavender"] .chart-panel .panel-head h2,
+.app-shell[data-theme="lavender"] .pulse-panel .panel-head h2 { color:#fff; }
+.app-shell[data-theme="lavender"] td,
+.app-shell[data-theme="lavender"] .alert-row,
+.app-shell[data-theme="lavender"] .secondary-button,
+.app-shell[data-theme="lavender"] .period select,
+.app-shell[data-theme="lavender"] .toolbar-row select,
+.app-shell[data-theme="lavender"] .search input { color:var(--text); }
+.app-shell[data-theme="lavender"] .secondary-button,
+.app-shell[data-theme="lavender"] .period,
+.app-shell[data-theme="lavender"] .icon-button,
+.app-shell[data-theme="lavender"] .search,
+.app-shell[data-theme="lavender"] .toolbar-row select { background:rgba(255,255,255,.78); border-color:rgba(86,84,166,.14); }
+.app-shell[data-theme="lavender"] .primary-button { color:#fff; background:linear-gradient(135deg,#477cf4,#8068e9); border:0; box-shadow:0 9px 22px rgba(75,88,211,.25); }
+.app-shell[data-theme="lavender"] .progress i,
+.app-shell[data-theme="lavender"] .breakdown i { background:linear-gradient(90deg,#08b6a7,#477cf4,#8b62eb); }
+.app-shell[data-theme="lavender"] .chart-tooltip { background:#fff; color:var(--text); border:0; box-shadow:0 12px 30px rgba(54,48,133,.22); }
+
+/* Light theme legibility fixes. */
+.app-shell[data-theme="ice"] .context-select b,
+.app-shell[data-theme="soft"] .context-select b,
+.app-shell[data-theme="ice"] .user b,
+.app-shell[data-theme="soft"] .user b,
+.app-shell[data-theme="ice"] .panel-head h2,
+.app-shell[data-theme="soft"] .panel-head h2,
+.app-shell[data-theme="ice"] .product-cell b,
+.app-shell[data-theme="soft"] .product-cell b,
+.app-shell[data-theme="ice"] .connection b,
+.app-shell[data-theme="soft"] .connection b,
+.app-shell[data-theme="ice"] .team-row b,
+.app-shell[data-theme="soft"] .team-row b { color:var(--text); }
+.app-shell[data-theme="lavender"] .context-select b,
+.app-shell[data-theme="lavender"] .panel-head h2,
+.app-shell[data-theme="lavender"] .product-cell b,
+.app-shell[data-theme="lavender"] .connection b,
+.app-shell[data-theme="lavender"] .team-row b { color:var(--text); }
+.app-shell[data-theme="ice"] th,
+.app-shell[data-theme="soft"] th { color:#657795; }
+.app-shell[data-theme="lavender"] th { color:#6e7196; }
+.app-shell[data-theme="ice"] td,
+.app-shell[data-theme="soft"] td { border-bottom-color:rgba(91,119,156,.13); }
+.app-shell[data-theme="lavender"] td { border-bottom-color:rgba(86,84,166,.12); }
+
+@media (max-width: 1080px) {
+  .theme-picker { margin-right:8px; }
+  .theme-picker button { width:25px; height:25px; }
+  .variant-label small { display:none; }
+}
+
+@media (max-width: 720px) {
+  .theme-picker { position:fixed; left:50%; bottom:72px; transform:translateX(-50%); z-index:28; padding:6px; box-shadow:0 14px 35px rgba(0,0,0,.28); }
+  .theme-picker button { width:34px; height:32px; }
+  .variant-label { margin-bottom:14px; }
+  .reference-bento { margin:0; }
+  .app-shell[data-theme="bento"] .fpb .fpb-c { padding-left:0; padding-right:0; }
+  .app-shell[data-theme="ice"] .mobile-nav,
+  .app-shell[data-theme="soft"] .mobile-nav { box-shadow:0 -8px 25px rgba(92,119,157,.13); }
+  .app-shell[data-theme="lavender"] .sidebar { margin:0; height:100vh; border-radius:0; }
+  .app-shell[data-theme="lavender"] .workspace { width:100%; margin-left:0; }
+  .app-shell[data-theme="lavender"] .mobile-nav { background:rgba(247,247,255,.95); box-shadow:0 -8px 25px rgba(63,55,145,.17); }
+}
