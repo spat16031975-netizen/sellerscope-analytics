@@ -192,4 +192,11 @@ main { width: 100%; min-width: 0; max-width: 1540px; margin: 0 auto; padding: 30
   .summary-card p { font-size:14px; }
   .bridge-item { min-width:210px; }
 }
+.table-disclosure { min-height:52px; display:flex; align-items:center; justify-content:space-between; gap:16px; margin:20px -20px -20px; padding:0 20px; border-top:1px solid var(--line); border-radius:0 0 14px 14px; background:#111c2d99; }
+.table-disclosure span { color:var(--muted); font-size:11px; }
+.table-disclosure button { min-height:32px; padding:0 11px; border:1px solid #426d9f; border-radius:8px; color:#b9d8ff; background:#1a2c44; font-size:10px; font-weight:750; cursor:pointer; }
+.table-disclosure button:hover { border-color:#66aaff; color:#fff; }
+.table-disclosure button:focus-visible { outline:2px solid #8dbfff; outline-offset:2px; }
+@media (max-width: 640px) { .table-disclosure { margin:16px -16px -16px; padding:0 16px; border-radius:0 0 12px 12px; } }
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior:auto !important; transition:none !important; animation:none !important; } }
+
