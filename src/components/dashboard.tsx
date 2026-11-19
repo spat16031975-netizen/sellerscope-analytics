@@ -285,11 +285,12 @@ function combineAnalytics(reports: UploadedReport[]): DashboardAnalytics {
   return { daily: primary?.daily ?? [], products: [...productMap.values()].sort((a, b) => b.revenue - a.revenue), campaigns, metrics: { ...(primary?.metrics ?? emptyMetrics), adSpend: adMetrics.adSpend, adRevenue: adMetrics.adRevenue, impressions: adMetrics.impressions, clicks: adMetrics.clicks } };
 }
 
-function reportKind(fileName: string, headers: string[]) {
-  const source = normalizeHeader(`${fileName} ${headers.join(" ")}`);
-  if (source.includes("остат") || source.includes("stock") || source.includes("ozonproductid")) return "Остатки";
-  if (source.includes("реклам") || source.includes("продвиж") || source.includes("advert") || source.includes("campaign")) return "Реклама";
-  if (source.includes("финанс") || source.includes("commission") || source.includes("удержан")) return "Финансы";
+export function reportKind(fileName: string, headers: string[]) {
+  const sources = [fileName, ...headers].map(normalizeHeader);
+  const has = (...variants: string[]) => sources.some((source) => variants.some((variant) => source.includes(variant)));
+  if (has("остат", "stock", "ozonproductid")) return "Остатки";
+  if (has("реклам", "продвиж", "advert", "campaign")) return "Реклама";
+  if (has("финанс", "commission", "удержан")) return "Финансы";
   return "Продажи";
 }
 
